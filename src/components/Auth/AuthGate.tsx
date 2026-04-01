@@ -23,10 +23,12 @@ export function AuthGate({ children, requiredRoles }: AuthGateProps) {
   }, [loading]);
 
   const handleNuclearEscape = () => {
-    // 💣 Nuclear Option: Disparamos el cierre de sesión sin esperar (no await)
-    // y recargamos la página AL INSTANTE para romper cualquier bucle de React.
+    console.log('[AuthGate] Ejecutando escape de emergencia...');
+    // Cerramos sesión localmente rápido
     signOut();
-    window.location.href = '/'; 
+    // 💣 Ultra-Nuclear: Redirección nativa forzada a la raíz
+    // Esto rompe cualquier bucle de React al descargar el script actual
+    window.location.assign(window.location.origin + '/?refresh=' + Date.now());
   };
 
   if (loading) {

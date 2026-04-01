@@ -44,51 +44,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
     let isMounted = true;
+    let authListener: any = null;
 
-    // 🛡️ Safety Timeout (Unlock UI after 10s if Supabase hangs)
+    // 🛡️ Safety Timeout (Unblock UI no matter what)
     timeoutId = setTimeout(() => {
       if (isMounted && loading) {
-        console.warn('[Auth] Safety Timeout disparado. Forzando setLoading(false).');
+        console.warn('[Auth] Safety Timeout: Forzando desbloqueo.');
         setLoading(false);
       }
-    }, 10000);
+    }, 8000);
 
-    const initializeAuth = async () => {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const init = async () => {
+      try {
+        // Obtenemos sesión inicial de forma síncrona/rápida
+        const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
 
-        console.log(`[Auth] Evento: ${event}`, session?.user?.id || 'No User');
+        const currentUser = session?.user ?? null;
+        if (currentUser) {
+          setUser(currentUser);
+          const p = await fetchProfile(currentUser.id);
+          if (isMounted) setProfile(p);
+        }
+      } catch (err) {
+        console.error('[Auth] Error init:', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      }
+
+      // Suscribirse a cambios después del init
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!isMounted) return;
+        console.log(`[Auth] Evento: ${event}`);
+        
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
-        try {
-          if (currentUser) {
-            const p = await fetchProfile(currentUser.id);
-            if (isMounted) setProfile(p);
-          } else {
-            if (isMounted) setProfile(null);
-          }
-        } catch (err) {
-          console.error('[Auth] Error procesando sesión:', err);
-        } finally {
-          if (isMounted) {
-            setLoading(false);
-            if (timeoutId) clearTimeout(timeoutId);
-          }
+        if (currentUser) {
+          const p = await fetchProfile(currentUser.id);
+          if (isMounted) setProfile(p);
+        } else {
+          if (isMounted) setProfile(null);
         }
+        
+        if (isMounted) setLoading(false);
       });
-
-      return subscription;
+      authListener = subscription;
     };
 
-    const subPromise = initializeAuth();
+    init();
 
     return () => {
       isMounted = false;
       if (timeoutId) clearTimeout(timeoutId);
-      subPromise.then(sub => sub.unsubscribe());
+      if (authListener) {
+        if (typeof authListener.unsubscribe === 'function') {
+          authListener.unsubscribe();
+        }
+      }
     };
-  }, []); // Solo al montar una vez
+  }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
