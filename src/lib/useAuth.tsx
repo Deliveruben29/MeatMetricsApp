@@ -90,11 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []); // Solo al montar una vez
 
-  const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
+  const signIn = useCallback(async (email: string, password: string): Promise<{ error: string | null }> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
     return { error: null };
-  };
+  }, []);
 
   const signOut = useCallback(async () => {
     try {

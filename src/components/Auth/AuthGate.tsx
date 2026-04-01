@@ -22,14 +22,11 @@ export function AuthGate({ children, requiredRoles }: AuthGateProps) {
     return () => clearTimeout(timer);
   }, [loading]);
 
-  const handleNuclearEscape = async () => {
-    try {
-      await signOut();
-      // 💣 Nuclear Option: Limpieza total de memoria y redirección forzada
-      window.location.href = '/'; 
-    } catch (err) {
-      window.location.reload();
-    }
+  const handleNuclearEscape = () => {
+    // 💣 Nuclear Option: Disparamos el cierre de sesión sin esperar (no await)
+    // y recargamos la página AL INSTANTE para romper cualquier bucle de React.
+    signOut();
+    window.location.href = '/'; 
   };
 
   if (loading) {
