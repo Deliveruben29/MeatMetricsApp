@@ -42,43 +42,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // 1. Comprobación instantánea al montar (Soluciona el cuelgue de "Cargando sesión")
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
+    let timeoutId: NodeJS.Timeout | null = null;
+    let isMounted = true;
+
+    // 🛡️ Safety Timeout (Unlock UI after 10s if Supabase hangs)
+    timeoutId = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('[Auth] Safety Timeout disparado. Forzando setLoading(false).');
+        setLoading(false);
+      }
+    }, 10000);
+
+    const initializeAuth = async () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!isMounted) return;
+
+        console.log(`[Auth] Evento: ${event}`, session?.user?.id || 'No User');
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         
-        if (currentUser) {
-          const p = await fetchProfile(currentUser.id);
-          setProfile(p);
+        try {
+          if (currentUser) {
+            const p = await fetchProfile(currentUser.id);
+            if (isMounted) setProfile(p);
+          } else {
+            if (isMounted) setProfile(null);
+          }
+        } catch (err) {
+          console.error('[Auth] Error procesando sesión:', err);
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+            if (timeoutId) clearTimeout(timeoutId);
+          }
         }
-      } catch (err) {
-        console.error('[Auth] Error crítico en inicialización:', err);
-      } finally {
-        setLoading(false);
-      }
+      });
+
+      return subscription;
     };
 
-    initAuth();
+    const subPromise = initializeAuth();
 
-    // 2. Suscripción a cambios futuros (Login/Logout/Token Refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Auth] Cambio detectado:', event);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      
-      if (currentUser) {
-        const p = await fetchProfile(currentUser.id);
-        setProfile(p);
-        setLoading(false);
-      } else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      subPromise.then(sub => sub.unsubscribe());
+    };
   }, []); // Solo al montar una vez
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
