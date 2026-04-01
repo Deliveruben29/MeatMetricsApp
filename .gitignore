@@ -1,0 +1,51 @@
+# Dependencias
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Variables de entorno - NUNCA subir al repositorio
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs y editores
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Archivos de debug temporales (generados durante desarrollo)
+dump*.cjs
+dump*.js
+extract.js
+*.cjs
+rawout.json
+jefa.json
+averias_out.txt
+dump_out.txt
+dump4800_out.txt
+tsc_errors*.txt
+out.log
+test_normalizer.ts
+
+# Excel de muestra (datos reales de la empresa, no subir)
+archivos_de_muestra/
