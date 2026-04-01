@@ -15,12 +15,22 @@ export function AuthGate({ children, requiredRoles }: AuthGateProps) {
   React.useEffect(() => {
     let timer: NodeJS.Timeout;
     if (loading) {
-      timer = setTimeout(() => setShowRetry(true), 7000);
+      timer = setTimeout(() => setShowRetry(true), 5000); // Antes 7000, ahora 5000 para mayor agilidad
     } else {
       setShowRetry(false);
     }
     return () => clearTimeout(timer);
   }, [loading]);
+
+  const handleNuclearEscape = async () => {
+    try {
+      await signOut();
+      // 💣 Nuclear Option: Limpieza total de memoria y redirección forzada
+      window.location.href = '/'; 
+    } catch (err) {
+      window.location.reload();
+    }
+  };
 
   if (loading) {
     return (
@@ -34,12 +44,12 @@ export function AuthGate({ children, requiredRoles }: AuthGateProps) {
           
           {showRetry && (
             <div className="pt-4 border-t border-slate-200 animate-in fade-in slide-in-from-top-4 duration-700">
-              <p className="text-xs text-slate-400 mb-4">¿Lleva demasiado tiempo? Prueba a reiniciar la sesión:</p>
+              <p className="text-xs text-slate-400 mb-4">¿Lleva demasiado tiempo? Prueba el escape forzado:</p>
               <button 
-                onClick={() => signOut()}
-                className="w-full py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 transition-colors shadow-sm"
+                onClick={handleNuclearEscape}
+                className="w-full py-3 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
               >
-                Forzar Cierre de Sesión
+                Forzar Salida y Reinicio
               </button>
             </div>
           )}
