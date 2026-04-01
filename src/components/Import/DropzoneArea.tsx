@@ -14,14 +14,15 @@ export function DropzoneArea({ onFilesAccepted }: DropzoneAreaProps) {
   }, [onFilesAccepted]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const dropzoneOptions: any = {
     onDrop,
     accept: {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.ms-excel': ['.xls', '.csv'],
-      'text/csv': ['.csv']
-    }
-  } as any);
+      'text/csv': ['.csv'],
+    },
+  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone(dropzoneOptions);
 
   return (
     <div

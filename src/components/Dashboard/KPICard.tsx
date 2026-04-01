@@ -6,26 +6,28 @@ export interface KPIData {
   label: string;
   value: string | number;
   unit: string;
-  change: string;
-  trend: 'up' | 'down';
+  change?: string;
+  trend?: 'up' | 'down';
   icon: LucideIcon;
   color: string;
   bg: string;
 }
 
-export function KPICard({ kpi, key }: { kpi: KPIData; key?: React.Key }) {
+export const KPICard: React.FC<{ kpi: KPIData }> = ({ kpi }) => {
   return (
-    <div key={key} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group">
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group">
       <div className="flex items-start justify-between">
         <div className={cn("p-3 rounded-xl transition-colors", kpi.bg)}>
           <kpi.icon className={cn("w-6 h-6", kpi.color)} />
         </div>
-        <span className={cn(
-          "text-xs font-bold px-2 py-1 rounded-lg",
-          kpi.trend === 'up' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-        )}>
-          {kpi.change}
-        </span>
+        {kpi.change !== undefined && (
+          <span className={cn(
+            "text-xs font-bold px-2 py-1 rounded-lg",
+            kpi.trend === 'up' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+          )}>
+            {kpi.change}
+          </span>
+        )}
       </div>
       <div className="mt-4">
         <p className="text-sm font-medium text-slate-500">{kpi.label}</p>
@@ -36,4 +38,4 @@ export function KPICard({ kpi, key }: { kpi: KPIData; key?: React.Key }) {
       </div>
     </div>
   );
-}
+};

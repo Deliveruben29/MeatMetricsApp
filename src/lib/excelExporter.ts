@@ -1,11 +1,6 @@
 /**
  * excelExporter.ts
  * Exportación a Excel usando SheetJS (xlsx) — ya incluido en el proyecto.
- * El formato condicional se implementa marcando las celdas de rendimiento < 80%
- * con una nota especial en la columna y un asterisco visual.
- * (SheetJS community edition no soporta estilos nativos de celda — se usa
- *  la escritura directa del buffer con colores via la API low-level de xlsx-js-style
- *  que sí los soporta, o simplemente exportamos datos limpios con notas en celdas.)
  */
 import * as XLSX from 'xlsx';
 import { ReportRow } from './types';
@@ -21,8 +16,8 @@ export function exportToExcel(rows: ReportRow[], filename = 'Reporte_MeatMetrics
 
   // ─── Fila de título ──────────────────────────────────────────────────
   const titleRow = [
-    ['CONTROL DE PRODUCCIÓN — SALA DE DESPIECE', '', '', '', '', '', '', '', '', '', ''],
-    ['Generado por MeatMetrics', '', '', '', '', new Date().toLocaleDateString('es-ES'), '', '', '', '', ''],
+    ['CONTROL DE PRODUCCIÓN — SALA DE DESPIECE', '', '', '', '', '', '', '', '', '', '', ''],
+    ['Generado por MeatMetrics', '', '', '', '', new Date().toLocaleDateString('es-ES'), '', '', '', '', '', ''],
     [], // fila vacía
   ];
 
@@ -31,7 +26,7 @@ export function exportToExcel(rows: ReportRow[], filename = 'Reporte_MeatMetrics
     'FECHA', 'TURNO', 'SECCIÓN', 'SUB-SECCIÓN',
     'TIPO DE INCIDENCIA', 'DESCRIPCIÓN DE LA AVERÍA',
     'INICIO PARO', 'FIN PARO', 'TOTAL MINUTOS',
-    'RENDIMIENTO (%)', 'ESTATUS',
+    'POLLOS NO COLGADOS', 'RENDIMIENTO (%)', 'ESTATUS',
   ];
 
   // ─── Filas de datos ──────────────────────────────────────────────────
@@ -48,19 +43,21 @@ export function exportToExcel(rows: ReportRow[], filename = 'Reporte_MeatMetrics
       row.inicioParo || '—',
       row.finParo || '—',
       row.totalMinutos,
-      rend + rendFlag,  // ⚠️ marca visual para rendimiento bajo
+      row.pollosNoColgados || 0,
+      rend + rendFlag,
       row.estatus,
     ];
   });
 
   // ─── Fila de totales ─────────────────────────────────────────────────
   const totalMinutos = rows.reduce((s, r) => s + r.totalMinutos, 0);
+  const totalPollos = rows.reduce((s, r) => s + (r.pollosNoColgados || 0), 0);
   const rendRows = rows.filter(r => r.rendimientoPct !== null);
   const avgRend = rendRows.length > 0
     ? (rendRows.reduce((s, r) => s + (r.rendimientoPct ?? 0), 0) / rendRows.length).toFixed(1) + '%'
     : '—';
 
-  const totalsRow = ['TOTAL', '', '', '', '', '', '', '', totalMinutos, avgRend, ''];
+  const totalsRow = ['TOTAL', '', '', '', '', '', '', '', totalMinutos, totalPollos, avgRend, ''];
 
   // ─── Combinar todas las filas ─────────────────────────────────────────
   const allRows = [
@@ -77,12 +74,12 @@ export function exportToExcel(rows: ReportRow[], filename = 'Reporte_MeatMetrics
   ws['!cols'] = [
     { wch: 14 }, { wch: 10 }, { wch: 16 }, { wch: 18 },
     { wch: 20 }, { wch: 46 }, { wch: 12 }, { wch: 12 },
-    { wch: 14 }, { wch: 16 }, { wch: 16 },
+    { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 16 },
   ];
 
   // ─── Merge de la celda del título ─────────────────────────────────────
   ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 10 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } },
   ];
 

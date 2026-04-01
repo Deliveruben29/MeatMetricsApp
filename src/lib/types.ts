@@ -8,6 +8,7 @@ export interface MeatMetricsLog {
   seccion: string;
   minutosParo: number;
   causaAveria: string;
+  pollosNoColgados: number;
   origenArchivo?: string;
 }
 
@@ -24,6 +25,7 @@ export interface ReportRow {
   finParo: string;
   totalMinutos: number;
   rendimientoPct: number | null;
+  pollosNoColgados: number;
   estatus: Estatus;
   origenArchivo?: string;
 }

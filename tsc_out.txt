@@ -1,0 +1,3 @@
+﻿src/components/Dashboard/Dashboard.tsx(6,25): error TS2307: Cannot find module '../../useAuth' or its corresponding type declarations.
+src/components/Dashboard/Dashboard.tsx(97,20): error TS2322: Type '{ key: string; kpi: { label: string; value: string; unit: string; icon: react.ForwardRefExoticComponent<any>; color: string; bg: string; }; }' is not assignable to type '{ kpi: KPIData; }'.
+  Property 'key' does not exist on type '{ kpi: KPIData; }'.
